@@ -12,7 +12,7 @@ export const rpcConfig: RPCConfig = {
 };
 
 export const RPC_EVENTS = {
-  NEW_BLOCK: 'new_block',
-  NEW_TRANSACTION: 'new_transaction',
-  QUERY_RESULT: 'query_result',
+  NEW_BLOCK: 'NEW_BLOCK',
+  NEW_TRANSACTION: 'NEW_TRANSACTION',
+  QUERY_RESULT: 'QUERY_RESULT',
 } as const;

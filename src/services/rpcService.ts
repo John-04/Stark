@@ -82,6 +82,12 @@ class RPCService {
 
       this.subscribe(RPC_EVENTS.QUERY_RESULT, handleResponse);
 
+      if (!this.ws) {
+        clearTimeout(timeoutId);
+        reject(new Error('WebSocket connection lost'));
+        return;
+      }
+
       this.ws.send(JSON.stringify({
         type: 'query',
         payload: { query }

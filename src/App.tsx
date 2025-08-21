@@ -17,6 +17,8 @@ import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
 import { AuthProvider } from './contexts/AuthContext';
 import Bounties from './pages/Bounties';
+import { SQLSandboxPage } from './pages/SQLSandboxPage';
+import { APITest } from './components/APITest';
 
 function App() {
   return (
@@ -31,7 +33,8 @@ function App() {
               <Route path="/signup" element={<SignUp />} />
               <Route path="/portfolio" element={<Portfolio />} />
               <Route path="/query" element={<AdvancedQueryEditorPage />} />
-                            <Route path="/dashboard" element={<DashboardBuilder />} />
+              <Route path="/sql-sandbox" element={<SQLSandboxPage />} />
+              <Route path="/dashboard" element={<DashboardBuilder />} />
               <Route path="/contracts" element={<ContractVerification />} />
               <Route path="/d/:id" element={<PublicDashboardView />} />
               <Route path="/bounty/:id" element={<BountyDetail />} />
@@ -40,6 +43,7 @@ function App() {
               <Route path="/premium" element={<Premium />} />
               <Route path="/bounties" element={<Bounties />} />
               <Route path="/swap" element={<SwapPage />} />
+              <Route path="/api-test" element={<APITest />} />
             </Routes>
           </main>
           <Toaster position="top-right" />
