@@ -5,9 +5,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import AnimatedCard from '../components/ui/AnimatedCard';
 import AnimatedButton from '../components/ui/AnimatedButton';
 import AnimatedInput from '../components/ui/AnimatedInput';
+import { AutoSwapper } from '../components/Swap/AutoSwapper';
 
 const CreateBounty = () => {
-  const { user } = useAuth();
+  const { user, provider, account } = useAuth();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -76,9 +77,23 @@ const CreateBounty = () => {
     
     setIsCreating(true);
     
-    // Mock bounty creation
-    setTimeout(() => {
-      setIsCreating(false);
+    try {
+      const response = await fetch('/api/bounties', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formData,
+          reward: parseFloat(formData.reward),
+          tags: formData.tags.split(',').map(tag => tag.trim()),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create bounty');
+      }
+
       // Reset form or redirect
       setFormData({
         title: '',
@@ -92,7 +107,12 @@ const CreateBounty = () => {
       });
       setErrors({});
       // Show success message
-    }, 2000);
+    } catch (error) {
+      console.error(error);
+      // Show error message
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -497,6 +517,20 @@ const CreateBounty = () => {
                         </div>
                       </div>
                     </AnimatedCard>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* AutoSwapper */}
+              <AnimatePresence>
+                {rewardAmount > 0 && provider && account && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                    transition={{ duration: 0.3, delay: 0.1 }}
+                  >
+                    <AutoSwapper provider={provider} account={account} />
                   </motion.div>
                 )}
               </AnimatePresence>

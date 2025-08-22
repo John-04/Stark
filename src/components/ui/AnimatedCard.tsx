@@ -52,55 +52,10 @@ const AnimatedCard: React.FC<AnimatedCardProps> = ({
       onClick={onClick}
       style={{ transformStyle: "preserve-3d" }}
     >
-      {/* Animated border gradient */}
-      {glow && (
-        <motion.div
-          className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100"
-          animate={{
-            background: [
-              "linear-gradient(0deg, rgba(59, 130, 246, 0.1), rgba(147, 51, 234, 0.1))",
-              "linear-gradient(90deg, rgba(59, 130, 246, 0.1), rgba(147, 51, 234, 0.1))",
-              "linear-gradient(180deg, rgba(59, 130, 246, 0.1), rgba(147, 51, 234, 0.1))",
-              "linear-gradient(270deg, rgba(59, 130, 246, 0.1), rgba(147, 51, 234, 0.1))",
-              "linear-gradient(360deg, rgba(59, 130, 246, 0.1), rgba(147, 51, 234, 0.1))"
-            ]
-          }}
-          transition={{ duration: 3, repeat: Infinity }}
-        />
-      )}
-      
       {/* Content */}
       <div className="relative z-10">
         {children}
       </div>
-      
-      {/* Floating particles effect */}
-      <motion.div
-        className="absolute top-4 right-4 w-2 h-2 bg-blue-400 rounded-full opacity-0 group-hover:opacity-100"
-        animate={{
-          y: [-20, -40, -20],
-          x: [0, 10, 0],
-          scale: [0, 1, 0]
-        }}
-        transition={{
-          duration: 2,
-          repeat: Infinity,
-          delay: 0.5
-        }}
-      />
-      <motion.div
-        className="absolute bottom-4 left-4 w-1 h-1 bg-purple-400 rounded-full opacity-0 group-hover:opacity-100"
-        animate={{
-          y: [20, 40, 20],
-          x: [0, -10, 0],
-          scale: [0, 1, 0]
-        }}
-        transition={{
-          duration: 2,
-          repeat: Infinity,
-          delay: 1
-        }}
-      />
     </motion.div>
   );
 };

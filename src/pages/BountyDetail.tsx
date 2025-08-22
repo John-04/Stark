@@ -3,10 +3,15 @@ import { useParams, Link } from 'react-router-dom';
 import { Calendar, Users, DollarSign, Clock, Code, FileText, Send, ExternalLink, Link as LinkIcon } from 'lucide-react';
 import SocialShare from '../components/SocialShare';
 import { getDashboards } from '../services/dashboardStore';
+import { useAuth } from '../contexts/AuthContext';
+import { AutoSwapper } from '../components/Swap/AutoSwapper';
+import AnimatedButton from '../components/ui/AnimatedButton';
 
 const BountyDetail = () => {
   const { id } = useParams();
+  const { user, provider, account } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [showSubmissionModal, setShowSubmissionModal] = useState(false);
   const [submissionMode, setSubmissionMode] = useState<'sql' | 'dashboard' | 'both'>('sql');
   const [submission, setSubmission] = useState({
@@ -241,6 +246,14 @@ const BountyDetail = () => {
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Bounty Stats</h3>
             <div className="space-y-3">
+              {user?.address === bounty.creator.address && (
+                <AnimatedButton
+                  onClick={() => setShowWithdrawModal(true)}
+                  className="w-full mb-4"
+                >
+                  Withdraw Funds
+                </AnimatedButton>
+              )}
               <div className="flex justify-between items-center">
                 <span className="text-gray-600 dark:text-gray-400">Reward</span>
                 <span className="font-semibold text-green-600">{bounty.reward} {bounty.currency}</span>
@@ -263,6 +276,29 @@ const BountyDetail = () => {
           </div>
         </div>
       </div>
+
+      {/* Withdraw Modal */}
+      {showWithdrawModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full">
+            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Withdraw Funds</h2>
+            </div>
+            <div className="p-6">
+              {provider && account ? (
+                <AutoSwapper provider={provider} account={account} />
+              ) : (
+                <p>Please connect your wallet to withdraw funds.</p>
+              )}
+            </div>
+            <div className="flex justify-end p-6 border-t border-gray-200 dark:border-gray-700">
+              <AnimatedButton onClick={() => setShowWithdrawModal(false)}>
+                Close
+              </AnimatedButton>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Submission Modal */}
       {showSubmissionModal && (
@@ -293,7 +329,7 @@ const BountyDetail = () => {
                   <textarea
                     value={submission.query}
                     onChange={(e) => setSubmission({ ...submission, query: e.target.value })}
-                    required={submissionMode!=='dashboard'}
+                    required={submissionMode === 'sql' || submissionMode === 'both'}
                     rows={10}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm dark:bg-gray-700 dark:text-white"
                     placeholder="Write your SQL analysis query here..."

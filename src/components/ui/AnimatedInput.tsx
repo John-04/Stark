@@ -85,7 +85,6 @@ const AnimatedInput: React.FC<AnimatedInputProps> = ({
             className={`absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors duration-200 ${
               error ? 'text-red-400' : isFocused ? 'text-blue-500' : 'text-gray-400'
             }`}
-            animate={error ? { x: [0, -5, 5, 0] } : {}}
             transition={{ duration: 0.4 }}
           >
             <Icon className="h-5 w-5" />
@@ -130,12 +129,7 @@ const AnimatedInput: React.FC<AnimatedInputProps> = ({
             whileHover={onRightIconClick ? { scale: 1.1 } : {}}
             whileTap={onRightIconClick ? { scale: 0.9 } : {}}
           >
-            <motion.div
-              animate={onRightIconClick && isFocused ? { rotate: 180 } : { rotate: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <RightIcon className="h-5 w-5" />
-            </motion.div>
+            <RightIcon className="h-5 w-5" />
           </motion.button>
         )}
 
@@ -183,28 +177,9 @@ const AnimatedInput: React.FC<AnimatedInputProps> = ({
             exit={{ opacity: 0, y: -10, height: 0 }}
             transition={{ duration: 0.2 }}
           >
-            <motion.div
-              animate={{ rotate: [0, 10, -10, 0] }}
-              transition={{ duration: 0.5 }}
-              className="mr-2"
-            >
-              <AlertCircle className="h-4 w-4" />
-            </motion.div>
+            <AlertCircle className="h-4 w-4 mr-2" />
             {error}
           </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Success Animation */}
-      <AnimatePresence>
-        {!error && hasValue && !isFocused && (
-          <motion.div
-            className="absolute top-4 right-4 w-2 h-2 bg-green-400 rounded-full"
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
-            transition={{ duration: 0.3 }}
-          />
         )}
       </AnimatePresence>
     </motion.div>

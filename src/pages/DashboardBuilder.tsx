@@ -13,6 +13,7 @@ import AnimatedButton from '../components/ui/AnimatedButton';
 import { Responsive, WidthProvider, Layout, Layouts } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
+import SavedQueries from '../components/SavedQueries';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, ArcElement, Title, Tooltip, Legend, Filler);
 
@@ -66,6 +67,25 @@ const DashboardBuilder = () => {
   const [searchParams] = useSearchParams();
   const [copied, setCopied] = useState(false);
 
+  const addWidgetFromSavedQuery = (savedQuery: any) => {
+    const newWidget: ChartWidget = {
+      id: Date.now().toString(),
+      type: savedQuery.visualizationType as WidgetType,
+      title: savedQuery.name,
+      query: savedQuery.query,
+      data: null,
+      config: {
+        xAxis: '',
+        yAxis: '',
+        aggregation: 'sum',
+      },
+      position: { x: 0, y: 0, w: 4, h: 8 },
+    };
+
+    setSelectedWidget(newWidget);
+    setShowWidgetEditor(true);
+  };
+
   useEffect(() => {
     const id = searchParams.get('dashId');
     if (id) {
@@ -77,10 +97,15 @@ const DashboardBuilder = () => {
   }, [searchParams]);
 
   const chartTypes = [
-    { type: 'bar' as const, name: 'Bar', icon: BarChart3, color: 'from-blue-500 to-cyan-500' },
-    { type: 'line' as const, name: 'Line', icon: LineChart, color: 'from-green-500 to-emerald-500' },
-    { type: 'pie' as const, name: 'Pie', icon: PieChart, color: 'from-purple-500 to-pink-500' },
-    { type: 'text' as const, name: 'Text', icon: Type, color: 'from-gray-500 to-gray-700' },
+    { type: 'bar', name: 'Bar', icon: BarChart3, color: 'from-blue-500 to-cyan-500' },
+    { type: 'line', name: 'Line', icon: LineChart, color: 'from-green-500 to-emerald-500' },
+    { type: 'pie', name: 'Pie', icon: PieChart, color: 'from-purple-500 to-pink-500' },
+    { type: 'text', name: 'Text', icon: Type, color: 'from-gray-500 to-gray-700' },
+    { type: 'area', name: 'Area', icon: AreaChart, color: 'from-orange-500 to-red-500' },
+    { type: 'scatter', name: 'Scatter', icon: ScatterChart, color: 'from-indigo-500 to-purple-500' },
+    { type: 'counter', name: 'Counter', icon: CounterIcon, color: 'from-teal-500 to-green-500' },
+    { type: 'table', name: 'Table', icon: TableIcon, color: 'from-gray-600 to-gray-800' },
+    { type: 'pivot', name: 'Pivot', icon: PivotIcon, color: 'from-pink-500 to-red-500' },
   ];
 
   const sampleQueries = [
@@ -101,11 +126,11 @@ const DashboardBuilder = () => {
     }
   ];
 
-  const createWidget = (type: 'bar' | 'line' | 'pie' | 'text') => {
+  const createWidget = (type: WidgetType) => {
     const newWidget: ChartWidget = {
       id: Date.now().toString(),
       type,
-      title: type === 'text' ? 'Text Block' : `${type.charAt(0).toUpperCase() + type.slice(1)} Chart` ,
+      title: type === 'text' ? 'Text Block' : `${type.charAt(0).toUpperCase() + type.slice(1)} Chart`,
       query: type === 'text' ? '' : sampleQueries[0].query,
       content: type === 'text' ? 'Click the settings icon to edit this text...' : undefined,
       data: null,
@@ -291,7 +316,7 @@ const DashboardBuilder = () => {
             </motion.div>
           </div>
 
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3 gap-2">
             <motion.div className="flex items-center gap-3 text-sm" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
               <motion.label className="inline-flex items-center gap-2 cursor-pointer" whileHover={{ scale: 1.05 }}>
                 <input type="checkbox" checked={Boolean((dashboard as any).isPublic)} onChange={(e) => setDashboard(prev => ({ ...prev, isPublic: e.target.checked }))} className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
@@ -318,7 +343,7 @@ const DashboardBuilder = () => {
         <div className="flex items-center space-x-4">
           <span className="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2"><Sparkles className="w-4 h-4" />Add Widget:</span>
           {chartTypes.map(({ type, name, icon: Icon, color }, index) => (
-            <motion.button key={type} onClick={() => createWidget(type)} className={`flex items-center space-x-2 px-3 py-2 bg-gradient-to-r ${color} text-white rounded-lg text-sm font-bold shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105`} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.05 }} whileHover={{ y: -2 }} whileTap={{ scale: 0.95 }}>
+            <motion.button key={type} onClick={() => createWidget(type as WidgetType)} className={`flex items-center space-x-2 px-3 py-2 bg-gradient-to-r ${color} text-white rounded-lg text-sm font-bold shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105`} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.05 }} whileHover={{ y: -2 }} whileTap={{ scale: 0.95 }}>
               <Icon className="h-4 w-4" />
               <span>{name}</span>
             </motion.button>
@@ -328,6 +353,7 @@ const DashboardBuilder = () => {
 
       {/* Dashboard Grid */}
       <div className="p-4">
+        <SavedQueries onAddWidget={addWidgetFromSavedQuery} />
         <div id="dashboard-capture">
           {dashboard.widgets.length === 0 ? (
             <motion.div className="text-center py-16" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
@@ -396,78 +422,95 @@ const DashboardBuilder = () => {
       <AnimatePresence>
         {showWidgetEditor && selectedWidget && (
           <motion.div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <motion.div className="glass rounded-2xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto" initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-black text-gray-900 dark:text-white flex items-center gap-3">
-                  <Settings className="w-6 h-6 text-blue-600" />
-                  Edit Widget
-                </h2>
-              </div>
+            <motion.div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}>
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-black text-gray-900 dark:text-white">Edit Widget</h2>
+                  <motion.button onClick={() => { setShowWidgetEditor(false); setSelectedWidget(null); }} className="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </motion.button>
+                </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Widget Title</label>
-                    <input type="text" value={selectedWidget.title} onChange={(e) => setSelectedWidget(prev => prev ? { ...prev, title: e.target.value } : null)} className="input-field" />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Widget Type</label>
-                    <select value={selectedWidget.type} onChange={(e) => setSelectedWidget(prev => prev ? { ...prev, type: e.target.value as WidgetType } : null)} className="input-field">
-                      <option value="bar">Bar Chart</option>
-                      <option value="line">Line Chart</option>
-                      <option value="pie">Pie Chart</option>
-                      <option value="text">Text</option>
-                    </select>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Widget Title</label>
+                    <input
+                      type="text"
+                      value={selectedWidget.title}
+                      onChange={(e) => setSelectedWidget(prev => prev ? { ...prev, title: e.target.value } : null)}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Enter widget title"
+                    />
                   </div>
 
                   {selectedWidget.type !== 'text' && (
-                    <div className="grid grid-cols-2 gap-3">
+                    <>
                       <div>
-                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">X-Axis Column</label>
-                        <input type="text" value={selectedWidget.config.xAxis} onChange={(e) => setSelectedWidget(prev => prev ? { ...prev, config: { ...prev.config, xAxis: e.target.value } } : null)} className="input-field" />
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">SQL Query</label>
+                        <textarea
+                          value={selectedWidget.query}
+                          onChange={(e) => setSelectedWidget(prev => prev ? { ...prev, query: e.target.value } : null)}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                          rows={4}
+                          placeholder="Enter your SQL query"
+                        />
                       </div>
-                      <div>
-                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Y-Axis Column</label>
-                        <input type="text" value={selectedWidget.config.yAxis} onChange={(e) => setSelectedWidget(prev => prev ? { ...prev, config: { ...prev.config, yAxis: e.target.value } } : null)} className="input-field" />
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">X-Axis Column</label>
+                          <input
+                            type="text"
+                            value={selectedWidget.config.xAxis}
+                            onChange={(e) => setSelectedWidget(prev => prev ? { ...prev, config: { ...prev.config, xAxis: e.target.value } } : null)}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="x_axis_column"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Y-Axis Column</label>
+                          <input
+                            type="text"
+                            value={selectedWidget.config.yAxis}
+                            onChange={(e) => setSelectedWidget(prev => prev ? { ...prev, config: { ...prev.config, yAxis: e.target.value } } : null)}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="y_axis_column"
+                          />
+                        </div>
                       </div>
+                    </>
+                  )}
+
+                  {selectedWidget.type === 'text' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Text Content</label>
+                      <textarea
+                        value={selectedWidget.content || ''}
+                        onChange={(e) => setSelectedWidget(prev => prev ? { ...prev, content: e.target.value } : null)}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        rows={6}
+                        placeholder="Enter your text content here..."
+                      />
                     </div>
                   )}
-                </div>
 
-                <div>
-                  {selectedWidget.type === 'text' ? (
-                    <div>
-                      <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Text Content</label>
-                      <textarea value={selectedWidget.content || ''} onChange={(e) => setSelectedWidget(prev => prev ? { ...prev, content: e.target.value } : null)} rows={12} className="input-field font-sans text-sm resize-none" />
-                    </div>
-                  ) : (
-                    <div>
-                      <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">SQL Query</label>
-                      <textarea value={selectedWidget.query} onChange={(e) => setSelectedWidget(prev => prev ? { ...prev, query: e.target.value } : null)} rows={12} className="input-field font-mono text-sm resize-none" />
-                      <div className="mt-3 text-xs text-gray-500">Tip: Use the sample queries to quickly populate the editor.</div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {selectedWidget.type !== 'text' && (
-                <div className="mt-6">
-                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Sample Queries</label>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    {sampleQueries.map((sample, index) => (
-                      <button key={index} onClick={() => setSelectedWidget(prev => prev ? { ...prev, query: sample.query, config: { ...prev.config, ...sample.config } } : null)} className="text-left p-3 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 hover:from-blue-100 hover:to-purple-100 dark:hover:from-blue-900/30 dark:hover:to-purple-900/30 rounded-lg border border-blue-200 dark:border-blue-800 transition-all">
-                        <div className="font-bold text-blue-900 dark:text-blue-200 mb-1">{sample.name}</div>
-                        <div className="text-xs text-blue-700 dark:text-blue-300 font-mono">{sample.query.slice(0, 60)}...</div>
-                      </button>
-                    ))}
+                  <div className="flex justify-end space-x-3 pt-4">
+                    <AnimatedButton
+                      variant="secondary"
+                      onClick={() => { setShowWidgetEditor(false); setSelectedWidget(null); }}
+                    >
+                      Cancel
+                    </AnimatedButton>
+                    <AnimatedButton
+                      variant="primary"
+                      onClick={saveWidget}
+                    >
+                      Save Widget
+                    </AnimatedButton>
                   </div>
                 </div>
-              )}
-
-              <div className="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <AnimatedButton variant="secondary" onClick={() => { setShowWidgetEditor(false); setSelectedWidget(null); }}>Cancel</AnimatedButton>
-                <AnimatedButton variant="primary" icon={Save} onClick={saveWidget}>Save Widget</AnimatedButton>
               </div>
             </motion.div>
           </motion.div>
@@ -478,31 +521,54 @@ const DashboardBuilder = () => {
       <AnimatePresence>
         {showMintModal && (
           <motion.div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <motion.div className="glass rounded-2xl p-8 w-full max-w-md" initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}>
-              <div className="text-center mb-6">
-                <Coins className="w-12 h-12 text-purple-600 mx-auto mb-2" />
-                <h2 className="text-2xl font-black text-gray-900 dark:text-white">Mint Dashboard as NFT</h2>
-              </div>
-              <AnimatedCard className="p-6 mb-6 bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/20 dark:to-pink-900/20 border-purple-200 dark:border-purple-800">
-                <h3 className="font-black text-purple-800 dark:text-purple-200 mb-2">{dashboard.name}</h3>
-                <p className="text-sm text-purple-600 dark:text-purple-300 mb-2">{dashboard.description || 'No description'}</p>
-                <div className="text-xs text-purple-500">{dashboard.widgets.length} widgets • Created {new Date(dashboard.created_at).toLocaleDateString()}</div>
-              </AnimatedCard>
-              <div className="text-sm text-gray-600 dark:text-gray-300 mb-6">
-                <p className="font-bold mb-2">This will:</p>
-                <ul className="list-disc list-inside space-y-1">
-                  <li>Upload dashboard to IPFS</li>
-                  <li>Mint as NFT on Starknet</li>
-                  <li>Transfer to your wallet</li>
-                  <li>Make it tradeable on marketplaces</li>
-                </ul>
-              </div>
-              <AnimatedCard className="p-4 mb-6 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border-yellow-200 dark:border-yellow-800">
-                <p className="text-sm text-yellow-800 dark:text-yellow-200"><strong>Note:</strong> Minting requires gas fees and is irreversible.</p>
-              </AnimatedCard>
-              <div className="flex justify-end space-x-3">
-                <AnimatedButton variant="secondary" onClick={() => setShowMintModal(false)}>Cancel</AnimatedButton>
-                <AnimatedButton variant="warning" icon={Coins} onClick={mintDashboard} loading={isMinting} className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600">{isMinting ? 'Minting...' : 'Mint NFT'}</AnimatedButton>
+            <motion.div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full" initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}>
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-black text-gray-900 dark:text-white">Mint Dashboard as NFT</h2>
+                  <motion.button onClick={() => setShowMintModal(false)} className="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </motion.button>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <motion.div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4" whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                      <Coins className="w-8 h-8 text-white" />
+                    </motion.div>
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Ready to mint?</h3>
+                    <p className="text-gray-600 dark:text-gray-300 text-sm">
+                      This will create an NFT of your dashboard on StarkNet. The NFT will include all widget configurations and current data.
+                    </p>
+                  </div>
+
+                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                    <h4 className="font-medium text-gray-900 dark:text-white mb-2">Dashboard Details</h4>
+                    <div className="space-y-1 text-sm text-gray-600 dark:text-gray-300">
+                      <div>Name: {dashboard.name}</div>
+                      <div>Widgets: {dashboard.widgets.length}</div>
+                      <div>Network: StarkNet</div>
+                      <div>Cost: ~0.001 ETH</div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end space-x-3">
+                    <AnimatedButton
+                      variant="secondary"
+                      onClick={() => setShowMintModal(false)}
+                    >
+                      Cancel
+                    </AnimatedButton>
+                    <AnimatedButton
+                      variant="primary"
+                      onClick={mintDashboard}
+                      loading={isMinting}
+                    >
+                      {isMinting ? 'Minting...' : 'Mint NFT'}
+                    </AnimatedButton>
+                  </div>
+                </div>
               </div>
             </motion.div>
           </motion.div>
@@ -511,5 +577,42 @@ const DashboardBuilder = () => {
     </div>
   );
 };
+
+// Missing icon components
+const AreaChart = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+  </svg>
+);
+
+const ScatterChart = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <circle cx="7" cy="7" r="1" />
+    <circle cx="12" cy="10" r="1" />
+    <circle cx="17" cy="6" r="1" />
+    <circle cx="8" cy="14" r="1" />
+    <circle cx="15" cy="16" r="1" />
+    <circle cx="10" cy="8" r="1" />
+    <circle cx="13" cy="13" r="1" />
+  </svg>
+);
+
+const CounterIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+  </svg>
+);
+
+const TableIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+  </svg>
+);
+
+const PivotIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+  </svg>
+);
 
 export default DashboardBuilder;

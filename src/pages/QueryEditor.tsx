@@ -3,6 +3,7 @@ import { Crown, Play, Save, Lock, Download, Database, BookOpen, Sparkles, Histor
 import { useAuth } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
+import { io, Socket } from 'socket.io-client';
 
 interface WebSocketMessage {
   type: 'query_result' | 'error';
@@ -41,47 +42,46 @@ const QueryEditor = () => {
   const [refreshInterval, setRefreshInterval] = useState(30);
   const [isError, setIsError] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [selectedVisualization, setSelectedVisualization] = useState('bar');
   
-  // WebSocket connection for real-time updates
-  const wsRef = useRef<WebSocket | null>(null);
+  const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
-    // Initialize WebSocket connection when RPC endpoint is set
-    if (rpcEndpoint && !wsRef.current) {
-      const ws = new WebSocket(rpcEndpoint.replace('http', 'ws'));
-      
-      ws.onopen = () => {
-        setIsConnected(true);
-        console.log('WebSocket connected');
-      };
+    socketRef.current = io('http://localhost:3000');
 
-      ws.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        // Handle real-time updates
-        setLastUpdate(new Date());
-        updateResults(data);
-      };
+    socketRef.current.on('connect', () => {
+      setIsConnected(true);
+    });
 
-      ws.onclose = () => {
-        setIsConnected(false);
-        // Attempt to reconnect after delay
-        setTimeout(() => {
-          if (rpcEndpoint) {
-            wsRef.current = null;
-          }
-        }, 5000);
-      };
+    socketRef.current.on('disconnect', () => {
+      setIsConnected(false);
+    });
 
-      wsRef.current = ws;
-    }
+    socketRef.current.on('query_result', (data) => {
+      setResults(data.rows);
+      setLastUpdate(new Date());
+      setQueryHistory(prev => [{
+        query,
+        timestamp: new Date(),
+        status: 'success',
+        duration: data.duration || 0
+      }, ...prev]);
+    });
+
+    socketRef.current.on('error', (error) => {
+      setError(error.message);
+      setQueryHistory(prev => [{
+        query,
+        timestamp: new Date(),
+        status: 'error',
+        duration: 0
+      }, ...prev]);
+    });
 
     return () => {
-      if (wsRef.current) {
-        wsRef.current.close();
-        wsRef.current = null;
-      }
+      socketRef.current?.disconnect();
     };
-  }, [rpcEndpoint]);
+  }, [query]);
 
   const updateResults = (newData: any) => {
     setResults(prevResults => {
@@ -156,14 +156,14 @@ const QueryEditor = () => {
             }
           } catch (error) {
             setIsError(true);
-            setErrorMessage('Failed to parse server response');
+            setErrorMessage('Failed to parse server response: ' + handleError(error));
           }
         };
 
         return ws;
       } catch (error) {
         setIsError(true);
-        setErrorMessage('Failed to connect: ' + error.toString());
+        setErrorMessage('Failed to connect: ' + handleError(error));
       }
     }
   };
@@ -171,14 +171,16 @@ const QueryEditor = () => {
   // Save query
   const saveQuery = async (name: string) => {
     try {
-      const response = await fetch('http://localhost:3001/query', {
+      const response = await fetch('http://localhost:3000/api/queries', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
         },
         body: JSON.stringify({
-          title: name,
-          content: query,
+          name,
+          query,
+          visualizationType: selectedVisualization,
         }),
       });
 
@@ -188,7 +190,7 @@ const QueryEditor = () => {
       loadSavedQueries();
     } catch (error) {
       setIsError(true);
-      setErrorMessage('Failed to save query: ' + (error instanceof Error ? error.message : String(error)));
+      setErrorMessage('Failed to save query: ' + handleError(error));
     }
   };
 
@@ -202,7 +204,7 @@ const QueryEditor = () => {
       setSavedQueries(queries);
     } catch (error) {
       setIsError(true);
-      setErrorMessage('Failed to load saved queries: ' + (error instanceof Error ? error.message : String(error)));
+      setErrorMessage('Failed to load saved queries: ' + handleError(error));
     }
   };
 
@@ -215,10 +217,7 @@ const QueryEditor = () => {
         // Re-run the current query
         if (query.trim()) {
           // Execute query using WebSocket
-          wsRef.current?.send(JSON.stringify({
-            type: 'query',
-            payload: { query }
-          }));
+          socketRef.current?.emit('query', { query });
         }
       }, refreshInterval * 1000);
     }
@@ -256,19 +255,20 @@ const QueryEditor = () => {
     if (user.queriesUsed >= user.queryLimit && !user.isPremium) {
       return;
     }
-    
+
     setIsExecuting(true);
-    // Mock query execution
+    setError(null);
+
+    socketRef.current?.emit('query', { query });
+
+    // Update query count
+    user.queriesUsed += 1;
+
+    // The results will be updated by the socket listener.
+    // We just need to set isExecuting to false after a short delay.
     setTimeout(() => {
-      setResults([
-        { block_number: 100001, hash: '0x1234...', timestamp: '2024-01-21 10:00:00' },
-        { block_number: 100002, hash: '0x5678...', timestamp: '2024-01-21 10:01:00' },
-        { block_number: 100003, hash: '0x9abc...', timestamp: '2024-01-21 10:02:00' }
-      ]);
       setIsExecuting(false);
-      // Update query count
-      user.queriesUsed += 1;
-    }, 1500);
+    }, 1000);
   };
 
   const canExecuteQuery = user.isPremium || user.queriesUsed < user.queryLimit;
@@ -325,8 +325,24 @@ const QueryEditor = () => {
             <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
               <h3 className="font-semibold text-gray-900 dark:text-white">Query Editor</h3>
               <div className="flex items-center space-x-2">
+                <select
+                  value={selectedVisualization}
+                  onChange={(e) => setSelectedVisualization(e.target.value)}
+                  className="px-3 py-2 rounded-lg text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none"
+                >
+                  <option value="bar">Bar Chart</option>
+                  <option value="line">Line Chart</option>
+                  <option value="pie">Pie Chart</option>
+                </select>
                 <button
-                  onClick={() => canSaveQuery ? null : null}
+                  onClick={() => {
+                    if (canSaveQuery) {
+                      const name = prompt('Enter query name:');
+                      if (name) {
+                        saveQuery(name);
+                      }
+                    }
+                  }}
                   disabled={!canSaveQuery}
                   className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium ${
                     canSaveQuery

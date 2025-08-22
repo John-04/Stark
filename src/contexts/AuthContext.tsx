@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { connect, disconnect as starknetDisconnect } from 'get-starknet';
-import { AccountInterface } from 'starknet';
+import { AccountInterface, Provider } from 'starknet';
 
 interface User {
   id: string;
@@ -27,6 +27,7 @@ interface AuthContextType {
   isConnecting: boolean;
   error: string | null;
   account: AccountInterface | null;
+  provider: Provider | null;
   connectWallet: () => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (name: string, email: string, password: string) => Promise<void>;
@@ -48,6 +49,7 @@ export const useAuth = () => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [account, setAccount] = useState<AccountInterface | null>(null);
+  const [provider, setProvider] = useState<Provider | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -141,6 +143,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         setUser(newUser);
         setAccount(starknet.account);
+        setProvider(starknet.provider);
 
         // Store session info
         localStorage.setItem('stark_session', JSON.stringify({
@@ -285,6 +288,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = () => {
     setUser(null);
     setAccount(null);
+    setProvider(null);
     setError(null);
     localStorage.removeItem('stark_session');
   };
@@ -311,6 +315,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <AuthContext.Provider value={{
       user,
       account,
+      provider,
       isConnecting,
       error,
       connectWallet,

@@ -5,6 +5,8 @@ import { UsersModule } from './modules/users/users.module';
 import { BountiesModule } from './modules/bounties/bounties.modules';
 import { SubmissionsModule } from './modules/submissions/submissions.module';
 import { PrismaModule } from './prisma/prisma.modules';
+import { StarknetModule } from './modules/starknet/starknet.module';
+import { QueriesModule } from './modules/queries/queries.module';
 
 @Module({
   imports: [
@@ -16,6 +18,8 @@ import { PrismaModule } from './prisma/prisma.modules';
     UsersModule,
     BountiesModule,
     SubmissionsModule,
+    StarknetModule,
+    QueriesModule,
   ],
 })
 export class AppModule {}

@@ -21,6 +21,7 @@ model User {
   // Relations
   created_bounties Bounty[]     @relation("BountyCreator")
   submissions      Submission[]
+  saved_queries    SavedQuery[]
 
   @@map("users")
 }
@@ -73,4 +74,16 @@ enum SubmissionStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+model SavedQuery {
+  id                 String   @id @default(cuid())
+  name               String
+  query              String
+  visualization_type String
+  created_at         DateTime @default(now())
+  user_id            String
+  user               User     @relation(fields: [user_id], references: [id])
+
+  @@map("saved_queries")
 }

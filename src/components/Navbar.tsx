@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Code2, User, Crown, LogOut, ChevronDown, Trophy, BarChart3, Database, Sparkles, Zap } from 'lucide-react';
+import { Code2, User, Crown, LogOut, ChevronDown, Trophy, BarChart3, Database, Sparkles, Zap, BookOpen } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import ConnectWallet from './ConnectWallet';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -25,9 +25,10 @@ const Navbar = () => {
 
   const navLinks = [
     { to: '/query', label: 'Query Editor', icon: Code2 },
-    { to: '/dashboard', label: 'Dashboards', icon: BarChart3 },
+    { to: '/dashboard', label: 'Dashboard Builder', icon: BarChart3 },
+    { to: '/starknet-dashboard', label: 'Starknet Dashboard', icon: Zap },
     { to: '/bounties', label: 'Bounties', icon: Trophy },
-    { to: '/swap', label: 'Swap', icon: Zap },
+    { to: '/docs', label: 'Docs', icon: BookOpen },
   ];
 
   return (
@@ -37,10 +38,10 @@ const Navbar = () => {
       animate={{ y: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
+      <div className="max-w-full mx-auto px-6 sm:px-8 lg:px-12">
+        <div className="flex justify-between items-center h-16 w-full">
           {/* Logo */}
-          <div className="flex items-center">
+          <div className="flex items-center flex-shrink-0">
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -80,7 +81,7 @@ const Navbar = () => {
           </div>
 
           {/* Navigation Links */}
-          <div className="hidden md:flex items-center space-x-2">
+          <div className="hidden md:flex items-center space-x-6 flex-grow justify-center">
             {user && navLinks.map(({ to, label, icon: Icon }, index) => (
               <motion.div
                 key={to}
@@ -94,7 +95,7 @@ const Navbar = () => {
                 >
                   <Link
                     to={to}
-                    className={`relative inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 ${
+                    className={`relative inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-300 ${
                       isActive(to)
                         ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg shadow-blue-500/25'
                         : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800'
@@ -126,7 +127,7 @@ const Navbar = () => {
           </div>
 
           {/* Right Side */}
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-4 flex-shrink-0">
             {user ? (
               <>
                 {/* Premium Badge */}
@@ -142,7 +143,7 @@ const Navbar = () => {
                   >
                     <Link 
                       to="/premium" 
-                      className="hidden sm:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 text-white text-sm font-bold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden"
+                      className="hidden sm:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 text-white text-xs font-bold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden"
                     >
                       <motion.div
                         animate={{ rotate: [0, 360] }}
@@ -179,7 +180,7 @@ const Navbar = () => {
                 >
                   <Link
                     to="/create-bounty"
-                    className="hidden sm:inline-flex items-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-5 py-2 rounded-xl text-sm font-bold shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden"
+                    className="hidden sm:inline-flex items-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden"
                   >
                     <motion.div
                       animate={{ 
@@ -190,7 +191,7 @@ const Navbar = () => {
                     >
                       <Trophy className="w-4 h-4" />
                     </motion.div>
-                    Create Bounty
+                    Create
                     <motion.div
                       className="absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-400 opacity-0 hover:opacity-20"
                       animate={{

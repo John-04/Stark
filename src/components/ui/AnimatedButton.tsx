@@ -38,7 +38,7 @@ const AnimatedButton: React.FC<AnimatedButtonProps> = ({
   };
   
   const sizeClasses = {
-    sm: 'px-4 py-2 text-sm gap-1',
+    sm: 'px-4 py-2 text-sm gap-2',
     md: 'px-6 py-3 text-base gap-2',
     lg: 'px-8 py-4 text-lg gap-3'
   };
@@ -61,25 +61,12 @@ const AnimatedButton: React.FC<AnimatedButtonProps> = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      {/* Shimmer effect */}
-      <motion.div
-        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100"
-        animate={{
-          x: ["-100%", "100%"],
-        }}
-        transition={{
-          duration: 1.5,
-          repeat: Infinity,
-          ease: "linear"
-        }}
-      />
-      
       {/* Content */}
       <div className="relative z-10 flex items-center gap-inherit">
         {Icon && iconPosition === 'left' && (
           <motion.div
-            animate={loading ? { rotate: 360 } : { rotate: [0, 5, -5, 0] }}
-            transition={loading ? { duration: 1, repeat: Infinity, ease: "linear" } : { duration: 2, repeat: Infinity }}
+            animate={loading ? { rotate: 360 } : {}}
+            transition={loading ? { duration: 1, repeat: Infinity, ease: "linear" } : {}}
           >
             <Icon className={iconSizes[size]} />
           </motion.div>
@@ -94,8 +81,8 @@ const AnimatedButton: React.FC<AnimatedButtonProps> = ({
         
         {Icon && iconPosition === 'right' && (
           <motion.div
-            animate={loading ? { rotate: 360 } : { x: [0, 2, 0] }}
-            transition={loading ? { duration: 1, repeat: Infinity, ease: "linear" } : { duration: 2, repeat: Infinity }}
+            animate={loading ? { rotate: 360 } : {}}
+            transition={loading ? { duration: 1, repeat: Infinity, ease: "linear" } : {}}
           >
             <Icon className={iconSizes[size]} />
           </motion.div>
