@@ -6,6 +6,7 @@ export interface RPCConfig {
 }
 
 export const rpcConfig: RPCConfig = {
+  defaultEndpoint: '/api/rpc',
   reconnectInterval: 5000, // 5 seconds
   maxReconnectAttempts: 5,
   queryTimeout: 30000, // 30 seconds

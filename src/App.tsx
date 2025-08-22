@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import Navbar from './components/Navbar';
@@ -17,13 +16,11 @@ import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
 import { AuthProvider } from './contexts/AuthContext';
 import Bounties from './pages/Bounties';
-<<<<<<< HEAD
 import { SQLSandboxPage } from './pages/SQLSandboxPage';
 import { APITest } from './components/APITest';
-=======
 import Docs from './pages/Docs';
 import StarknetDashboard from './pages/StarknetDashboard';
->>>>>>> 9254c0b525dd7888601ae906645914e9b7a2ba92
+import { RPCTest } from './components/RPCTest';
 
 function App() {
   return (
@@ -38,13 +35,9 @@ function App() {
               <Route path="/signup" element={<SignUp />} />
               <Route path="/portfolio" element={<Portfolio />} />
               <Route path="/query" element={<AdvancedQueryEditorPage />} />
-<<<<<<< HEAD
               <Route path="/sql-sandbox" element={<SQLSandboxPage />} />
               <Route path="/dashboard" element={<DashboardBuilder />} />
-=======
-                            <Route path="/dashboard" element={<DashboardBuilder />} />
               <Route path="/starknet-dashboard" element={<StarknetDashboard />} />
->>>>>>> 9254c0b525dd7888601ae906645914e9b7a2ba92
               <Route path="/contracts" element={<ContractVerification />} />
               <Route path="/d/:id" element={<PublicDashboardView />} />
               <Route path="/bounty/:id" element={<BountyDetail />} />
@@ -53,11 +46,9 @@ function App() {
               <Route path="/premium" element={<Premium />} />
               <Route path="/bounties" element={<Bounties />} />
               <Route path="/swap" element={<SwapPage />} />
-<<<<<<< HEAD
               <Route path="/api-test" element={<APITest />} />
-=======
               <Route path="/docs" element={<Docs />} />
->>>>>>> 9254c0b525dd7888601ae906645914e9b7a2ba92
+              <Route path="/rpc-test" element={<RPCTest />} />
             </Routes>
           </main>
           <Toaster position="top-right" />

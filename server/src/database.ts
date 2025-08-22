@@ -1,5 +1,5 @@
 import sqlite3 from 'sqlite3';
-import { open } from 'sqlite';
+import { open, Database } from 'sqlite';
 import { logger } from './utils/logger';
 
 let db: any = null;
@@ -7,7 +7,7 @@ let db: any = null;
 export const initializeDatabase = async () => {
   try {
     db = await open({
-      filename: ':memory:', // In-memory database for development
+      filename: process.env.DATABASE_PATH || ':memory:', // Use file database if specified
       driver: sqlite3.Database
     });
 
@@ -30,6 +30,7 @@ export const initializeDatabase = async () => {
     `);
 
     logger.info('Database initialized');
+    return db; // Return database instance for use by other services
   } catch (error) {
     logger.error('Database initialization failed:', error);
     throw error;

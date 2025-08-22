@@ -7,7 +7,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api/rpc': {
-        target: 'https://e8eeb24f808b.ngrok-free.app',
+        target: 'https://33b60227a006.ngrok-free.app',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/rpc/, ''),
         headers: {

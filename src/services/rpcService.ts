@@ -1,32 +1,29 @@
 import { rpcConfig, RPC_EVENTS } from '../config/rpc';
 
 class RPCService {
-  private ws: WebSocket | null = null;
+  private endpoint: string | null = null;
   private reconnectAttempts = 0;
   private listeners: Map<string, Set<Function>> = new Map();
 
   connect(endpoint: string): Promise<void> {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       try {
-        this.ws = new WebSocket(endpoint.replace('http', 'ws'));
+        // Test HTTP connectivity first
+        const response = await fetch(endpoint, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
 
-        this.ws.onopen = () => {
+        if (response.ok || response.status === 404) {
+          // Connection successful (404 is fine, means server is responding)
+          this.endpoint = endpoint;
           this.reconnectAttempts = 0;
           resolve();
-        };
-
-        this.ws.onmessage = (event) => {
-          const data = JSON.parse(event.data);
-          this.handleMessage(data);
-        };
-
-        this.ws.onclose = () => {
-          this.handleDisconnect();
-        };
-
-        this.ws.onerror = (error) => {
-          reject(error);
-        };
+        } else {
+          reject(new Error(`HTTP ${response.status}: ${response.statusText}`));
+        }
       } catch (error) {
         reject(error);
       }
@@ -46,8 +43,8 @@ class RPCService {
       setTimeout(() => {
         this.reconnectAttempts++;
         // Attempt to reconnect
-        if (this.ws?.url) {
-          this.connect(this.ws.url);
+        if (this.endpoint) {
+          this.connect(this.endpoint);
         }
       }, rpcConfig.reconnectInterval);
     }
@@ -65,41 +62,49 @@ class RPCService {
   }
 
   async executeQuery(query: string): Promise<any> {
-    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+    if (!this.endpoint) {
       throw new Error('Not connected to RPC endpoint');
     }
 
-    return new Promise((resolve, reject) => {
-      const timeoutId = setTimeout(() => {
-        reject(new Error('Query timed out'));
-      }, rpcConfig.queryTimeout);
+    // Try different common endpoints for SQL queries
+    const possibleEndpoints = [
+      `${this.endpoint}/query`,
+      `${this.endpoint}/sql`,
+      `${this.endpoint}/execute`,
+      `${this.endpoint}/api/query`,
+      `${this.endpoint}` // POST to root
+    ];
 
-      const handleResponse = (payload: any) => {
-        clearTimeout(timeoutId);
-        this.unsubscribe(RPC_EVENTS.QUERY_RESULT, handleResponse);
-        resolve(payload);
-      };
+    for (const endpoint of possibleEndpoints) {
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ query })
+        });
 
-      this.subscribe(RPC_EVENTS.QUERY_RESULT, handleResponse);
-
-      if (!this.ws) {
-        clearTimeout(timeoutId);
-        reject(new Error('WebSocket connection lost'));
-        return;
+        if (response.ok) {
+          const result = await response.json();
+          return { endpoint: endpoint, result };
+        } else if (response.status !== 404) {
+          // If it's not a 404, it might be a valid endpoint with other issues
+          throw new Error(`Query failed at ${endpoint}: ${response.status} ${response.statusText}`);
+        }
+      } catch (error) {
+        if (error.message.includes('Query failed at')) {
+          throw error; // Re-throw non-404 errors
+        }
+        // Continue to next endpoint for network errors
       }
+    }
 
-      this.ws.send(JSON.stringify({
-        type: 'query',
-        payload: { query }
-      }));
-    });
+    throw new Error('No valid query endpoint found. Tried: ' + possibleEndpoints.join(', '));
   }
 
   disconnect() {
-    if (this.ws) {
-      this.ws.close();
-      this.ws = null;
-    }
+    this.endpoint = null;
     this.listeners.clear();
   }
 }
